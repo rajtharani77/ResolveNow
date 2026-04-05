@@ -73,7 +73,7 @@ class AssignmentService:
         )
 
         assignment_record = {
-            "complaint_id": complaint_object_id,
+            "complaint_ref_id": complaint_object_id,
             "faculty_id": next_faculty_id,
             "department_id": department_object_id,
             "assigned_at": assigned_at,

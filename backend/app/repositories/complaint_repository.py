@@ -38,14 +38,16 @@ class ComplaintRepository:
 
     # Student listing (normalize to strings)
     async def get_by_user(self, user_id: str) -> List[dict]:
-        db = get_database()
-        complaints = await db["complaints"].find(
+        complaints_cursor = self.collection.find(
             {"created_by": ObjectId(user_id)}
-        ).to_list(length=100)
+        ).sort("created_at", -1)
+        complaints = await complaints_cursor.to_list(length=None)
         for c in complaints:
             c["_id"] = str(c["_id"])
-            c["created_by"] = str(c["created_by"])
-            c["department_id"] = str(c["department_id"])
+            if c.get("created_by"):
+                c["created_by"] = str(c["created_by"])
+            if c.get("department_id"):
+                c["department_id"] = str(c["department_id"])
         return complaints
 
     # Fetch by human-readable complaint_id (normalize to strings)
@@ -76,6 +78,58 @@ class ComplaintRepository:
             except Exception:
                 pass
         return complaint
+
+    async def list_by_ids(self, complaint_ids: list[Any]) -> list[dict[str, Any]]:
+        """
+        Fetch all complaints for a given list of complaint ObjectIds, sorted by most recent.
+        """
+        if not complaint_ids:
+            return []
+
+        normalized_ids: list[ObjectId] = []
+        for cid in complaint_ids:
+            if isinstance(cid, str) and ObjectId.is_valid(cid):
+                normalized_ids.append(ObjectId(cid))
+            elif isinstance(cid, ObjectId):
+                normalized_ids.append(cid)
+
+        if not normalized_ids:
+            return []
+
+        cursor = self.collection.find({"_id": {"$in": normalized_ids}}).sort("created_at", -1)
+        complaints = await cursor.to_list(length=None)
+
+        for c in complaints:
+            c["_id"] = str(c["_id"])
+            if c.get("created_by"):
+                c["created_by"] = str(c["created_by"])
+            if c.get("department_id"):
+                c["department_id"] = str(c["department_id"])
+
+        return complaints
+
+    async def update(self, complaint_id: Any, update_data: dict[str, Any]) -> dict[str, Any] | None:
+        """
+        Updates a complaint by its MongoDB _id and returns the updated document.
+        """
+        normalized_id = complaint_id
+        if isinstance(complaint_id, str) and ObjectId.is_valid(complaint_id):
+            normalized_id = ObjectId(complaint_id)
+
+        result = await self.collection.find_one_and_update(
+            {"_id": normalized_id},
+            {"$set": update_data},
+            return_document=True,
+        )
+
+        if result:
+            result["_id"] = str(result["_id"])
+            if result.get("created_by"):
+                result["created_by"] = str(result["created_by"])
+            if result.get("department_id"):
+                result["department_id"] = str(result["department_id"])
+
+        return result
 
     async def update_assignment_status(
         self,

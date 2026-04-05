@@ -69,64 +69,47 @@ def build_sample_faculty() -> list[dict]:
 
 
 async def seed_faculty() -> None:
+    """
+    Ensures sample faculty exist and synchronizes related data.
+    - Inserts a sample faculty member if they don't exist by email.
+    - Links the most recent faculty user ID to the correct department.
+    - Finds any assignments pointing to stale/old faculty user IDs (from previous
+      seeding runs) and updates them to point to the current faculty user ID.
+    """
     db = get_database()
     user_collection = db["users"]
     dept_collection = db["departments"]
-
-    # Only seed if no faculty exists
-    existing_faculty = await user_collection.count_documents({"role": UserRole.FACULTY.value})
-    if existing_faculty > 0:
-        return
+    assignments_collection = db["faculty_assignments"]
 
     sample_faculty = build_sample_faculty()
-    
-    for faculty_data in sample_faculty:
-        dept_name = faculty_data.pop("department")
-        existing_user = await user_collection.find_one({"email": faculty_data["email"]})
-        
-        if not existing_user:
-            result = await user_collection.insert_one(faculty_data)
-            faculty_id = result.inserted_id
-            
-            # Link faculty to department
-            await dept_collection.update_one(
-                {"name": dept_name},
-                {"$addToSet": {"faculty_user_ids": faculty_id}}
-            )
-        else:
-            # If user exists, still ensure they're linked to the department
-            faculty_id = existing_user["_id"]
-            await dept_collection.update_one(
-                {"name": dept_name},
-                {"$addToSet": {"faculty_user_ids": faculty_id}}
-            )
-
-
-async def insert_missing_sample_faculty() -> dict[str, int]:
-    db = get_database()
-    user_collection = db["users"]
-    dept_collection = db["departments"]
-    sample_faculty = build_sample_faculty()
-
-    inserted_count = 0
-    skipped_count = 0
 
     for faculty_data in sample_faculty:
+        email = faculty_data["email"]
         dept_name = faculty_data.pop("department")
-        existing_user = await user_collection.find_one({"email": faculty_data["email"]})
-        
-        if existing_user:
-            faculty_id = existing_user["_id"]
-            skipped_count += 1
-        else:
+
+        # Find all users with this email, newest first
+        cursor = user_collection.find({"email": email}).sort("created_at", -1)
+        all_users_with_email = await cursor.to_list(length=None)
+
+        current_user_id = None
+        if not all_users_with_email:
+            # If user doesn't exist at all, create them
             result = await user_collection.insert_one(faculty_data)
-            faculty_id = result.inserted_id
-            inserted_count += 1
-            
-        # Ensure faculty is linked to the department
+            current_user_id = result.inserted_id
+        else:
+            # The first one in the sorted list is the current one
+            current_user_id = all_users_with_email[0]["_id"]
+
+        # Ensure the current user is linked to the department
         await dept_collection.update_one(
-            {"name": dept_name},
-            {"$addToSet": {"faculty_user_ids": faculty_id}}
+            {"name": dept_name}, {"$addToSet": {"faculty_user_ids": current_user_id}}
         )
 
-    return {"inserted": inserted_count, "skipped": skipped_count}
+        # Find all other (stale) IDs for this email
+        stale_ids = [user["_id"] for user in all_users_with_email[1:]]
+
+        if stale_ids:
+            # Update any assignments pointing to old IDs
+            await assignments_collection.update_many(
+                {"faculty_id": {"$in": stale_ids}}, {"$set": {"faculty_id": current_user_id}}
+            )

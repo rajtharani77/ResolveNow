@@ -179,7 +179,7 @@ class AdminService:
         faculty_by_complaint: dict[str, str] = {}
         for rec in assignment_records:
             try:
-                faculty_by_complaint[str(rec["complaint_id"])] = str(rec["faculty_id"])
+                faculty_by_complaint[str(rec["complaint_ref_id"])] = str(rec["faculty_id"])
             except Exception:
                 continue
 
