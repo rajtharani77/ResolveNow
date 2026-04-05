@@ -12,7 +12,9 @@ from app.seeds.department_seed import seed_departments
 from app.seeds.faculty_seed import seed_faculty
 from app.seeds.user_seed import seed_users
 from app.services.auth_service import AuthService
+
 from app.api.routes.complaint_routes import router as complaint_router
+from app.api.routes.faculty_routes import router as faculty_router
 
 
 auth_service = AuthService()
@@ -49,10 +51,15 @@ app.add_middleware(
 
 app.include_router(auth_router, prefix=settings.api_prefix)
 app.include_router(admin_router, prefix=settings.api_prefix)
+
 app.include_router(
     complaint_router,
     prefix="/api/v1/complaints",
     tags=["Complaints"]
+)
+app.include_router(
+    faculty_router,
+    prefix="/api/v1",
 )
 
 

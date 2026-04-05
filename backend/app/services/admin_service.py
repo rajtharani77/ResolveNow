@@ -34,6 +34,7 @@ class AdminService:
             email=user["email"],
             role=user["role"],
             user_status=user.get("user_status") or UserStatus.ACTIVE.value,
+            is_email_verified=user.get("is_email_verified", False),
             created_at=user["created_at"],
         )
 
@@ -62,18 +63,18 @@ class AdminService:
         users_by_id: dict[str, dict],
         departments_by_id: dict[str, dict],
     ) -> AdminComplaintListItem:
-        created_by = users_by_id.get(str(complaint["created_by"]))
-        department = departments_by_id.get(str(complaint["department_id"]))
+        created_by = users_by_id.get(str(complaint.get("created_by")))
+        department = departments_by_id.get(str(complaint.get("department_id")))
         return AdminComplaintListItem(
             id=str(complaint["_id"]),
-            complaint_id=complaint["complaint_id"],
-            title=complaint["title"],
-            description=complaint["description"],
-            priority=complaint["priority"],
-            status=complaint["status"],
-            created_at=complaint["created_at"],
-            created_by_name=created_by["name"] if created_by else None,
-            department_name=department["name"] if department else None,
+            complaint_id=complaint.get("complaint_id", "N/A"),
+            title=complaint.get("title", "No Title Provided"),
+            description=complaint.get("description", "No description available."),
+            priority=complaint.get("priority", "UNKNOWN"),
+            status=complaint.get("status", "UNKNOWN"),
+            created_at=complaint.get("created_at", datetime.utcnow()),
+            created_by_name=created_by.get("name") if created_by else None,
+            department_name=department.get("name") if department else None,
         )
 
     async def list_regular_users(
@@ -155,8 +156,14 @@ class AdminService:
             limit=page_size,
         )
 
-        user_ids = list({complaint["created_by"] for complaint in complaints})
-        department_ids = list({complaint["department_id"] for complaint in complaints})
+        user_ids_set = {c.get("created_by") for c in complaints}
+        user_ids_set.discard(None)
+        user_ids = list(user_ids_set)
+
+        department_ids_set = {c.get("department_id") for c in complaints}
+        department_ids_set.discard(None)
+        department_ids = list(department_ids_set)
+
         users = await self.user_repository.list_by_ids(user_ids)
         departments = await self.department_repository.list_by_ids(department_ids)
         users_by_id = {str(user["_id"]): user for user in users}

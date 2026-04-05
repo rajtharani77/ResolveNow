@@ -6,6 +6,7 @@ import ViewComplaints from "../features/admin/ViewComplaints";
 import ViewDepartments from "../features/admin/ViewDepartments";
 import Login from "../features/auth/Login";
 import Register from "../features/auth/Register";
+import FacultyDashboard from "../features/faculty/FacultyDashboard";
 import LandingPage from "../features/home/LandingPage";
 import VerifyEmail from "../features/auth/VerifyEmail";
 import StudentComplaintDashboard from "../features/complaints/StudentComplaintDashboard";
@@ -22,6 +23,7 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/dashboard" element={<StudentComplaintDashboard initialView="overview" />} />
+      <Route path="/faculty/dashboard" element={<FacultyDashboard />} />
       <Route path="/complaint/create" element={<StudentComplaintDashboard initialView="create" />} />
       <Route path="/create-complaint" element={<StudentComplaintDashboard initialView="create" />} />
       <Route path="/my-complaints" element={<StudentComplaintDashboard initialView="list" />} />

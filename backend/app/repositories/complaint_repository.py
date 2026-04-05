@@ -52,6 +52,10 @@ class ComplaintRepository:
 
 class ComplaintRepository:
 
+    @property
+    def collection(self) -> Any:
+        return get_database()["complaints"]
+
     async def create(self, data: dict):
         db = get_database()
 
@@ -92,3 +96,24 @@ class ComplaintRepository:
             complaint["department_id"] = str(complaint["department_id"])
 
         return complaint
+
+    async def update_assignment_status(
+        self,
+        complaint_id: Any,
+        *,
+        status: str,
+        updated_at: Any,
+    ) -> None:
+        normalized_complaint_id = complaint_id
+        if isinstance(complaint_id, str) and ObjectId.is_valid(complaint_id):
+            normalized_complaint_id = ObjectId(complaint_id)
+
+        await self.collection.update_one(
+            {"_id": normalized_complaint_id},
+            {
+                "$set": {
+                    "status": status,
+                    "updated_at": updated_at,
+                }
+            },
+        )

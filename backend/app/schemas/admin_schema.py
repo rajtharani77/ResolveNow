@@ -1,54 +1,53 @@
 from datetime import datetime
+from typing import List, Optional
 
-from pydantic import BaseModel, EmailStr, Field
-
-from app.models.complaint_model import ComplaintPriority, ComplaintStatus
-from app.models.department_model import DepartmentName, DepartmentPriority
-from app.models.user_model import UserRole, UserStatus
+from pydantic import BaseModel
 
 
 class AdminUserListItem(BaseModel):
     id: str
     name: str
-    email: EmailStr
-    role: UserRole
-    user_status: UserStatus
+    email: str
+    role: str
+    user_status: str
+    is_email_verified: bool
     created_at: datetime
 
 
 class PaginatedAdminUsersResponse(BaseModel):
-    items: list[AdminUserListItem]
-    page: int = Field(..., ge=1)
-    page_size: int = Field(..., ge=1)
-    total: int = Field(..., ge=0)
-    total_pages: int = Field(..., ge=0)
+    items: List[AdminUserListItem]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
 
 
+# Schemas for Department Listing
 class DepartmentListItem(BaseModel):
     id: str
-    name: DepartmentName
+    name: str
     description: str
-    default_priority: DepartmentPriority
-    faculty_count: int = Field(default=0)
+    default_priority: str
+    faculty_count: int
 
 
 class FacultyMemberItem(BaseModel):
     id: str
     name: str
-    email: EmailStr
+    email: str
 
 
 class DepartmentDetailItem(BaseModel):
     id: str
-    name: DepartmentName
+    name: str
     description: str
-    default_priority: DepartmentPriority
-    faculty_members: list[FacultyMemberItem] = Field(default_factory=list)
+    default_priority: str
+    faculty_members: List[FacultyMemberItem]
 
 
 class FacultyAssignmentRequest(BaseModel):
-    user_id: str = Field(..., min_length=24, max_length=24)
-    department_id: str = Field(..., min_length=24, max_length=24)
+    user_id: str
+    department_id: str
 
 
 class FacultyAssignmentResponse(BaseModel):
@@ -62,16 +61,16 @@ class AdminComplaintListItem(BaseModel):
     complaint_id: str
     title: str
     description: str
-    priority: ComplaintPriority
-    status: ComplaintStatus
+    status: str
+    priority: str
     created_at: datetime
-    created_by_name: str | None = None
-    department_name: DepartmentName | None = None
+    created_by_name: Optional[str] = None
+    department_name: Optional[str] = None
 
 
 class PaginatedAdminComplaintsResponse(BaseModel):
-    items: list[AdminComplaintListItem]
-    page: int = Field(..., ge=1)
-    page_size: int = Field(..., ge=1)
-    total: int = Field(..., ge=0)
-    total_pages: int = Field(..., ge=0)
+    items: List[AdminComplaintListItem]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int

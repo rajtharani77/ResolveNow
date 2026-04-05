@@ -40,3 +40,14 @@ def send_verification_email(recipient: str, recipient_name: str, verification_to
         f"If you did not sign up for the Complaint Management System, you can ignore this email.\n"
     )
     return send_email(recipient, "Verify your email address", email_body)
+
+
+def send_complaint_resolved_email(recipient: str, recipient_name: str, complaint_title: str, complaint_id_str: str) -> bool:
+    email_body = (
+        f"Hello {recipient_name},\n\n"
+        f"Your complaint, '{complaint_title}' (ID: {complaint_id_str}), has been marked as resolved.\n\n"
+        f"You can log in to the portal to view the resolution details.\n\n"
+        f"Thank you,\n"
+        f"The {settings.smtp_from_name} Team"
+    )
+    return send_email(recipient, f"Update on your complaint: {complaint_id_str}", email_body)

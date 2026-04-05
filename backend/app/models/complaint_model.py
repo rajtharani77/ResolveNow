@@ -37,3 +37,4 @@ class Complaint(TimestampMixin):
     deadline: Optional[datetime] = None
     escalated_at: Optional[datetime] = None
     resolved_at: Optional[datetime] = None
+    resolution_explanation: Optional[str] = None

@@ -56,3 +56,4 @@ def require_roles(*allowed_roles: UserRole):
 
 
 get_current_admin = require_roles(UserRole.ADMIN)
+get_current_faculty_user = require_roles(UserRole.FACULTY)

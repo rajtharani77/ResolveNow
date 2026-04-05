@@ -5,7 +5,9 @@ from pathlib import Path
 from pydantic_settings import BaseSettings
 
 
-BASE_DIR = Path(__file__).resolve().parents[3]
+
+# Use backend directory as base for .env
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 ENV_FILE = BASE_DIR / ".env"
 
 

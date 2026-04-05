@@ -56,10 +56,15 @@ function Login() {
     try {
       const response = await authService.login(form);
       setMessage(`Welcome back, ${response.user.name}.`);
-      navigate(
-        response.user.role === "admin" ? "/admin/dashboard" : "/dashboard",
-        { replace: true }
-      );
+
+      if (response.user.role === "admin") {
+        navigate("/admin/dashboard", { replace: true });
+      } else if (response.user.role === "faculty") {
+        navigate("/faculty/dashboard", { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
+
     } catch (requestError) {
       setError(
         getUserFacingApiError(
