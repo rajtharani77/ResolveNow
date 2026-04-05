@@ -7,7 +7,6 @@ from app.core.logger import get_logger
 from app.models.complaint_model import ComplaintStatus
 from app.repositories.complaint_repository import ComplaintRepository
 from app.repositories.facultyAssignmentRepository import FacultyAssignmentRepository
-from app.services.notification_service import NotificationService
 
 logger = get_logger(__name__)
 
@@ -17,11 +16,9 @@ class FacultyService:
         self,
         complaint_repo: ComplaintRepository = Depends(),
         assignment_repo: FacultyAssignmentRepository = Depends(),
-        notification_service: NotificationService = Depends(),
     ):
         self.complaint_repo = complaint_repo
         self.assignment_repo = assignment_repo
-        self.notification_service = notification_service
 
     async def list_assigned_complaints(self, faculty_id: Any) -> list[dict[str, Any]]:
         """Fetches all complaints assigned to a specific faculty member."""
@@ -66,17 +63,5 @@ class FacultyService:
             "resolved_at": datetime.now(timezone.utc),
         }
         updated_complaint = await self.complaint_repo.update(complaint_id, update_data)
-
-        student_id = complaint.get("created_by")
-        if student_id:
-            try:
-                await self.notification_service.create_resolution_notification(
-                    user_id=student_id,
-                    complaint_id=complaint_id,
-                    complaint_title=complaint.get("title", "N/A"),
-                )
-                logger.info(f"Resolution notification sent for complaint {complaint_id} to student {student_id}")
-            except Exception as e:
-                logger.error(f"Failed to send resolution notification for complaint {complaint_id}: {e}")
 
         return updated_complaint

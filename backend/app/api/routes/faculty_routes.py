@@ -2,7 +2,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.api.deps import get_current_active_user
+from app.api.deps import get_current_user
 from app.core.logger import get_logger
 from app.models.user_model import User, UserRole
 from app.schemas.complaint_schema import ComplaintOut
@@ -14,7 +14,7 @@ router = APIRouter()
 logger = get_logger(__name__)
 
 
-def get_current_faculty_user(current_user: User = Depends(get_current_active_user)) -> User:
+def get_current_faculty_user(current_user: User = Depends(get_current_user)) -> User:
     """Dependency to ensure the current user is a faculty member."""
     if current_user.role != UserRole.FACULTY:
         raise HTTPException(
@@ -38,7 +38,7 @@ async def get_assigned_complaints(
     return complaints
 
 
-@router.post(
+@router.patch(
     "/complaints/{complaint_id}/resolve",
     response_model=ComplaintResolutionResponse,
     summary="Resolve a Complaint",

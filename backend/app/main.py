@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes.admin_routes import router as admin_router
 from app.api.routes.auth_routes import router as auth_router
 from app.api.routes.complaint_routes import router as complaint_router
+from app.api.routes.faculty_routes import router as faculty_router
 from app.config.database import close_mongo_connection, connect_to_mongo, initialize_database
 from app.config.settings import settings
 from app.core.logger import get_logger
@@ -70,6 +71,7 @@ app.add_middleware(
 app.include_router(auth_router, prefix=settings.api_prefix)
 app.include_router(admin_router, prefix=settings.api_prefix)
 app.include_router(complaint_router, prefix="/api/v1/complaints", tags=["Complaints"])
+app.include_router(faculty_router, prefix=f"{settings.api_prefix}/faculty", tags=["Faculty"])
 
 
 @app.get("/", tags=["Health"])
